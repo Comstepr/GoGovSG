@@ -39,7 +39,7 @@ export interface Mailer {
   initMailer(): void
 
   /**
-   * Sends email to SES / MailDev to send out. Falls back to Postman.
+   * Sends email via SMTP or falls back to Postman.
    */
   mailOTP(email: string, otp: string, ip: string): Promise<void>
   mailJobSuccess(email: string, downloadLinks: string[]): Promise<void>
@@ -121,7 +121,7 @@ export class MailerNode implements Mailer {
       logger.info(`Sending Postman mail`)
       return this.sendPostmanMail(mailBody)
     }
-    logger.info(`Sending SES mail`)
+    logger.info(`Sending SMTP mail`)
     return this.sendTransporterMail(mailBody)
   }
 

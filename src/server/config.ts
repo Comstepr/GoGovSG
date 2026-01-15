@@ -35,8 +35,8 @@ const requiredVars: string[] = [
   'API_KEY_SALT', // To generate APIKey
 ]
 
-// AWS Simple Email Service
-const sesVars: string[] = ['SES_HOST', 'SES_USER', 'SES_PASS', 'SES_PORT']
+// SMTP Configuration
+const smtpVars: string[] = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_PORT']
 
 // Winston for generic logging
 export const logger: winston.Logger = createLogger({
@@ -98,11 +98,11 @@ let proxy: boolean = true
 let cookieConfig = null
 let otpLimit: number = 5
 
-// Configure transporer options for nodemailer
+// Configure transporter options for nodemailer
 // All session variables will now be casted to non-nullable strings
 transporterOpts = {
-  host: process.env.SES_HOST as string,
-  port: process.env.SES_PORT as string,
+  host: process.env.SMTP_HOST as string,
+  port: process.env.SMTP_PORT as string,
   pool: true,
   maxMessages: 100,
   maxConnections: 20,
@@ -129,12 +129,12 @@ if (DEV_ENV) {
     secure: true,
     maxAge,
   }
-  exitIfAnyMissing(sesVars)
+  exitIfAnyMissing(smtpVars)
 
-  // Confgiure SES specific options
+  // Configure SMTP authentication
   transporterOpts.auth = {
-    user: process.env.SES_USER as string,
-    pass: process.env.SES_PASS as string,
+    user: process.env.SMTP_USER as string,
+    pass: process.env.SMTP_PASS as string,
   }
 }
 

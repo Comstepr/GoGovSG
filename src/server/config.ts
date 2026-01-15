@@ -242,10 +242,6 @@ const displayHostnameMap = {
   health: 'For.sg',
 }
 export const displayHostname = displayHostnameMap[assetVariant]
-export const postmanApiUrl: string | undefined = process.env.POSTMAN_API_URL
-export const postmanApiKey: string | undefined = process.env.POSTMAN_API_KEY
-export const activatePostmanFallback: boolean =
-  process.env.ACTIVATE_POSTMAN_FALLBACK === 'true'
 export const bulkUploadMaxNum: number =
   Number(process.env.BULK_UPLOAD_MAX_NUM) || 1000
 export const bulkUploadRandomStrLength: number =

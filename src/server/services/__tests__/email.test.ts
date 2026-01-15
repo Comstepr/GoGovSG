@@ -13,61 +13,15 @@ describe('Mailer tests', () => {
   const testMailBody = {
     to: 'alexis@open.gov.sg',
     body: 'Hi',
-    subject: 'Hi from postman',
+    subject: 'Hi',
     senderDomain: 'go.gov.sg',
   } as MailBody
 
-  const mockFetch = jest.fn()
-
   beforeEach(() => {
     jest.resetModules()
-    mockFetch.mockReset()
   })
 
   afterAll(jest.resetModules)
-
-  describe('sendPostmanMail', () => {
-    it('should throw error if postman api key is undefined', async () => {
-      jest.mock('../../config', () => ({
-        logger: console,
-        postmanApiKey: '',
-      }))
-      const { MailerNode } = require('../email')
-      const service = new MailerNode()
-
-      await expect(service.sendPostmanMail(testMailBody)).rejects.toThrowError()
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('should throw error if postman api url is undefined', async () => {
-      jest.mock('../../config', () => ({
-        logger: console,
-        postmanApiUrl: '',
-        postmanApiKey: 'hey',
-      }))
-      const { MailerNode } = require('../email')
-      const service = new MailerNode()
-
-      await expect(service.sendPostmanMail(testMailBody)).rejects.toThrowError()
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('should throw error if postman fails to send mail', async () => {
-      jest.mock('cross-fetch', () => mockFetch)
-      jest.mock('../../config', () => ({
-        logger: console,
-        postmanApiKey: 'key',
-        postmanApiUrl: 'url',
-      }))
-      const { MailerNode } = require('../email')
-      const service = new MailerNode()
-
-      mockFetch.mockResolvedValue({ ok: false })
-
-      await expect(service.sendPostmanMail(testMailBody)).rejects.toThrowError()
-      expect(mockFetch).toHaveBeenCalled()
-    })
-  })
 
   describe('sendTransporterMail', () => {
     it('should throw error if transporter fails to send mail', async () => {
@@ -92,7 +46,7 @@ describe('Mailer tests', () => {
   })
 
   describe('sendMail', () => {
-    it('should send via nodemailer by default', async () => {
+    it('should send via nodemailer', async () => {
       const sendMailMock = jest.fn((_, callback) => callback())
       jest.mock('nodemailer', () => ({
         createTransport: jest.fn().mockImplementation(() => ({
@@ -105,25 +59,6 @@ describe('Mailer tests', () => {
       service.initMailer()
       await service.sendMail(testMailBody)
       expect(sendMailMock).toHaveBeenCalled()
-    })
-
-    it('should send via Postman if activatePostmanFallback is true', async () => {
-      jest.mock('cross-fetch', () => mockFetch)
-      jest.mock('../../config', () => ({
-        logger: console,
-        activatePostmanFallback: true,
-        postmanApiKey: 'key',
-        postmanApiUrl: 'url',
-      }))
-      const { MailerNode } = require('../email')
-      const service = new MailerNode()
-
-      const postmanSpy = jest.spyOn(service, 'sendPostmanMail')
-      mockFetch.mockResolvedValue({ ok: true })
-
-      await service.sendMail(testMailBody)
-      expect(postmanSpy).toHaveBeenCalledWith(testMailBody)
-      expect(mockFetch).toHaveBeenCalled()
     })
   })
 

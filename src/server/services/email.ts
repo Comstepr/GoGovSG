@@ -1,19 +1,10 @@
 /* eslint class-methods-use-this: ["error", { "exceptMethods":
-  ["mailOTP", "initMailer", "sendPostmanMail", "sendTransporterMail"] }] */
+  ["mailOTP", "initMailer", "sendTransporterMail"] }] */
 
 import { injectable } from 'inversify'
 import nodemailer from 'nodemailer'
-import fetch from 'cross-fetch'
 import assetVariant from '../../shared/util/asset-variant'
-import {
-  activatePostmanFallback,
-  logger,
-  ogUrl,
-  otpExpiry,
-  postmanApiKey,
-  postmanApiUrl,
-  transporterOptions,
-} from '../config'
+import { logger, ogUrl, otpExpiry, transporterOptions } from '../config'
 import {
   BULK_QR_DOWNLOAD_FORMATS,
   BULK_QR_DOWNLOAD_MAPPINGS,
@@ -39,7 +30,7 @@ export interface Mailer {
   initMailer(): void
 
   /**
-   * Sends email via SMTP or falls back to Postman.
+   * Sends email via SMTP.
    */
   mailOTP(email: string, otp: string, ip: string): Promise<void>
   mailJobSuccess(email: string, downloadLinks: string[]): Promise<void>
@@ -52,43 +43,8 @@ export interface Mailer {
 
 @injectable()
 export class MailerNode implements Mailer {
-  public aFetch: any = fetch
-
   initMailer() {
     transporter = nodemailer.createTransport(transporterOptions)
-  }
-
-  async sendPostmanMail(mailBody: MailBody): Promise<void> {
-    if (!postmanApiKey || !postmanApiUrl) {
-      logger.error('No Postman credentials found')
-      throw new Error('Unable to send Postman email')
-    }
-    const { to, subject, body, senderDomain } = mailBody
-    const mail = {
-      recipient: to,
-      from: `${senderDomain} <donotreply@mail.postman.gov.sg>`,
-      subject,
-      body,
-    }
-
-    const response = await fetch(postmanApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${postmanApiKey}`,
-      },
-      body: JSON.stringify(mail),
-    })
-    if (!response.ok) {
-      const error = new Error(
-        `Failed to send Postman mail:\tError: ${
-          response.statusText
-        }\thttpResponse: ${response.status}\t body:${JSON.stringify(response)}`,
-      )
-      logger.error(error.message)
-      throw error
-    }
-    return
   }
 
   sendTransporterMail(mailBody: MailBody): Promise<void> {
@@ -116,10 +72,6 @@ export class MailerNode implements Mailer {
     const mailBody: MailBody = {
       ...mail,
       senderDomain: mail.senderDomain || domainVariant,
-    }
-    if (activatePostmanFallback) {
-      logger.info(`Sending Postman mail`)
-      return this.sendPostmanMail(mailBody)
     }
     logger.info(`Sending SMTP mail`)
     return this.sendTransporterMail(mailBody)
